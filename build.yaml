@@ -9,6 +9,6 @@ description: >
   Get Music Video metadata from IMVDb
 category: "Metadata"
 artifacts:
-- "Jellyfin.Plugins.IMVDb.dll"
+- "Jellyfin.Plugin.IMVDb.dll"
 changelog: >
   changelog
