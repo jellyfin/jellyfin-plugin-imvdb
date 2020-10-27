@@ -38,8 +38,8 @@
             loadConfiguration: function () {
                 Dashboard.showLoadingMsg();
 
-                ApiClient.getPluginConfiguration(ImvdbPluginConfiguration.pluginUniqueId).then(function (config) {
-                    document.getElementById('txtImvdbApiKey').value = config.ApiKey;
+                ApiClient.getPluginConfiguration(ImvdbPluginConfiguration.uniquePluginId).then(function (config) {
+                    document.getElementById('txtImvdbApiKey').value = config.ApiKey || '';
                     Dashboard.hideLoadingMsg();
                 });
             },
@@ -47,10 +47,10 @@
             saveConfiguration: function () {
                 Dashboard.showLoadingMsg();
 
-                ApiClient.getPluginConfiguration(ImvdbPluginConfiguration.pluginUniqueId).then(function (config) {
+                ApiClient.getPluginConfiguration(ImvdbPluginConfiguration.uniquePluginId).then(function (config) {
                     config.ApiKey = document.getElementById('txtImvdbApiKey').value;
 
-                    ApiClient.updatePluginConfiguration(ImvdbPluginConfiguration.pluginUniqueId, config).then(function (result) {
+                    ApiClient.updatePluginConfiguration(ImvdbPluginConfiguration.uniquePluginId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });
                 });
