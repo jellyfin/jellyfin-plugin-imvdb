@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Jellyfin.Plugin.IMVDb.Models
@@ -20,6 +21,6 @@ namespace Jellyfin.Plugin.IMVDb.Models
         /// Gets or sets the list of results.
         /// </summary>
         [JsonPropertyName("results")]
-        public ImvdbVideo[] Results { get; set; }
+        public IReadOnlyList<ImvdbVideo> Results { get; set; }
     }
 }

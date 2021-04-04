@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Jellyfin.Plugin.IMVDb.Models
@@ -44,7 +45,7 @@ namespace Jellyfin.Plugin.IMVDb.Models
         /// Gets or sets the list of artists.
         /// </summary>
         [JsonPropertyName("artists")]
-        public ImvdbArtist[] Artists { get; set; }
+        public IReadOnlyList<ImvdbArtist> Artists { get; set; }
 
         /// <summary>
         /// Gets or sets the images.

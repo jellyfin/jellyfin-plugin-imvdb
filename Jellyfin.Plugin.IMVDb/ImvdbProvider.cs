@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -55,7 +56,8 @@ namespace Jellyfin.Plugin.IMVDb
 
             if (string.IsNullOrEmpty(imvdbId))
             {
-                var searchResults = await GetSearchResults(info, cancellationToken);
+                var searchResults = await GetSearchResults(info, cancellationToken)
+                    .ConfigureAwait(false);
                 var searchResult = searchResults.FirstOrDefault();
                 if (searchResult != null)
                 {
@@ -78,7 +80,8 @@ namespace Jellyfin.Plugin.IMVDb
             else
             {
                 // do lookup here by imvdb id
-                var releaseResult = await GetIdResult(imvdbId, cancellationToken);
+                var releaseResult = await GetIdResultAsync(imvdbId, cancellationToken)
+                    .ConfigureAwait(false);
                 if (releaseResult != null)
                 {
                     result.HasMetadata = true;
@@ -113,7 +116,8 @@ namespace Jellyfin.Plugin.IMVDb
                 return Enumerable.Empty<RemoteSearchResult>();
             }
 
-            var searchResults = await GetSearchResponse(searchInfo, apiKey, cancellationToken);
+            var searchResults = await GetSearchResponseAsync(searchInfo, apiKey, cancellationToken)
+                .ConfigureAwait(false);
             if (searchResults == null)
             {
                 return Enumerable.Empty<RemoteSearchResult>();
@@ -140,7 +144,7 @@ namespace Jellyfin.Plugin.IMVDb
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClientFactory.CreateClient(NamedClient.Default)
-                .GetAsync(url, cancellationToken);
+                .GetAsync(new Uri(url), cancellationToken);
         }
 
         private string? GetApiKey()
@@ -148,13 +152,13 @@ namespace Jellyfin.Plugin.IMVDb
             var apiKey = ImvdbPlugin.Instance?.Configuration.ApiKey;
             if (string.IsNullOrEmpty(apiKey))
             {
-                _logger.LogWarning("ApiKey is unset.");
+                _logger.LogWarning("ApiKey is unset");
             }
 
             return apiKey;
         }
 
-        private async Task<ImvdbVideo?> GetIdResult(string imvdbId, CancellationToken cancellationToken)
+        private async Task<ImvdbVideo?> GetIdResultAsync(string imvdbId, CancellationToken cancellationToken)
         {
             var apiKey = GetApiKey();
             if (apiKey == null)
@@ -163,25 +167,31 @@ namespace Jellyfin.Plugin.IMVDb
             }
 
             var url = $"{BaseUrl}/video/{imvdbId}";
-            await using var response = await GetResponse(url, apiKey, cancellationToken);
-            return await JsonSerializer.DeserializeAsync<ImvdbVideo>(response, _jsonSerializerOptions, cancellationToken);
+            await using var response = await GetResponseAsync(url, apiKey, cancellationToken)
+                .ConfigureAwait(false);
+            return await JsonSerializer.DeserializeAsync<ImvdbVideo>(response, _jsonSerializerOptions, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        private async Task<ImvdbSearchResponse?> GetSearchResponse(MusicVideoInfo searchInfo, string apiKey, CancellationToken cancellationToken)
+        private async Task<ImvdbSearchResponse?> GetSearchResponseAsync(MusicVideoInfo searchInfo, string apiKey, CancellationToken cancellationToken)
         {
             var url = $"{BaseUrl}/search/videos?q={string.Join("+", searchInfo.Artists)}+{searchInfo.Name}";
-            await using var response = await GetResponse(url, apiKey, cancellationToken);
-            return await JsonSerializer.DeserializeAsync<ImvdbSearchResponse>(response, _jsonSerializerOptions, cancellationToken);
+            await using var response = await GetResponseAsync(url, apiKey, cancellationToken)
+                .ConfigureAwait(false);
+            return await JsonSerializer.DeserializeAsync<ImvdbSearchResponse>(response, _jsonSerializerOptions, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        private async Task<Stream> GetResponse(string url, string apiKey, CancellationToken cancellationToken)
+        private async Task<Stream> GetResponseAsync(string url, string apiKey, CancellationToken cancellationToken)
         {
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
             requestMessage.Headers.TryAddWithoutValidation("IMVDB-APP-KEY", apiKey);
             var response = await _httpClientFactory.CreateClient(NamedClient.Default)
-                .SendAsync(requestMessage, cancellationToken);
+                .SendAsync(requestMessage, cancellationToken)
+                .ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStreamAsync(cancellationToken);
+            return await response.Content.ReadAsStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }
