@@ -75,7 +75,8 @@ namespace Jellyfin.Plugin.IMVDb
                             {
                                 Path = searchResult.ImageUrl
                             }
-                        }
+                        },
+                        ProviderIds = searchResult.ProviderIds
                     };
                 }
             }
