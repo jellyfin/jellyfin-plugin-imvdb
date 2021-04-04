@@ -39,7 +39,7 @@ namespace Jellyfin.Plugin.IMVDb.Models
         /// Gets or sets the year.
         /// </summary>
         [JsonPropertyName("year")]
-        public int Year { get; set; }
+        public int? Year { get; set; }
 
         /// <summary>
         /// Gets or sets the list of artists.
@@ -51,6 +51,7 @@ namespace Jellyfin.Plugin.IMVDb.Models
         /// Gets or sets the images.
         /// </summary>
         [JsonPropertyName("image")]
+        [JsonConverter(typeof(JsonImageResponseConverter))]
         public ImvdbImage? Image { get; set; }
     }
 }
