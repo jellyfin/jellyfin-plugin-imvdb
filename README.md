@@ -1,15 +1,14 @@
-<h1 align="center">Jellyfin IMVDb Plugin</h1>
-<h3 align="center">Part of the <a href="https://jellyfin.media">Jellyfin Project</a></h3>
+# Jellyfin IMVDb Plugin
 
-<p align="center">
-This plugin is built with .NET Core to download metadata for tv.
-</p>
+## Part of the [Jellyfin Project](https://jellyfin.org)
+
+#### Repository - https://repo.codyrobibero.dev/manifest.json
 
 ## Build Process
 
 1. Clone or download this repository
 
-2. Ensure you have .NET Core SDK setup and installed
+2. Ensure you have .NET SDK setup and installed
 
 3. Build plugin with following command.
 
