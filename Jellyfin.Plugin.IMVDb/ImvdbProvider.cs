@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -186,6 +188,7 @@ namespace Jellyfin.Plugin.IMVDb
         {
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
             requestMessage.Headers.TryAddWithoutValidation("IMVDB-APP-KEY", apiKey);
+            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
             var response = await _httpClientFactory.CreateClient(NamedClient.Default)
                 .SendAsync(requestMessage, cancellationToken)
                 .ConfigureAwait(false);
