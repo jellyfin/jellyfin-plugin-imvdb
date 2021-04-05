@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Mime;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.IMVDb.Models;
-using MediaBrowser.Common.Json;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Providers;
@@ -18,29 +12,31 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.IMVDb
+namespace Jellyfin.Plugin.IMVDb.Providers
 {
     /// <summary>
     /// IMVDb Provider.
     /// </summary>
     public class ImvdbProvider : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>
     {
-        private const string BaseUrl = "https://imvdb.com/api/v1";
-
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<ImvdbProvider> _logger;
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
+        private readonly IImvdbClient _imvdbClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ImvdbProvider"/> class.
         /// </summary>
         /// <param name="httpClientFactory">Instance of the <see cref="IHttpClientFactory"/> interface.</param>
         /// <param name="logger">Instance of the <see cref="ILogger{ImvdbProvider}"/> interface.</param>
-        public ImvdbProvider(IHttpClientFactory httpClientFactory, ILogger<ImvdbProvider> logger)
+        /// <param name="imvdbClient">Instance of the <see cref="IImvdbClient"/> interface.</param>
+        public ImvdbProvider(
+            IHttpClientFactory httpClientFactory,
+            ILogger<ImvdbProvider> logger,
+            IImvdbClient imvdbClient)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
-            _jsonSerializerOptions = JsonDefaults.GetOptions();
+            _imvdbClient = imvdbClient;
         }
 
         /// <inheritdoc />
@@ -83,7 +79,7 @@ namespace Jellyfin.Plugin.IMVDb
             else
             {
                 // do lookup here by imvdb id
-                var releaseResult = await GetIdResultAsync(imvdbId, cancellationToken)
+                var releaseResult = await _imvdbClient.GetIdResultAsync(imvdbId, cancellationToken)
                     .ConfigureAwait(false);
                 if (releaseResult != null)
                 {
@@ -113,13 +109,8 @@ namespace Jellyfin.Plugin.IMVDb
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MusicVideoInfo searchInfo, CancellationToken cancellationToken)
         {
             _logger.LogDebug("Get search result for {Name}", searchInfo.Name);
-            var apiKey = GetApiKey();
-            if (string.IsNullOrWhiteSpace(apiKey))
-            {
-                return Enumerable.Empty<RemoteSearchResult>();
-            }
 
-            var searchResults = await GetSearchResponseAsync(searchInfo, apiKey, cancellationToken)
+            var searchResults = await _imvdbClient.GetSearchResponseAsync(searchInfo, cancellationToken)
                 .ConfigureAwait(false);
             if (searchResults == null)
             {
@@ -148,54 +139,6 @@ namespace Jellyfin.Plugin.IMVDb
         {
             return _httpClientFactory.CreateClient(NamedClient.Default)
                 .GetAsync(new Uri(url), cancellationToken);
-        }
-
-        private string? GetApiKey()
-        {
-            var apiKey = ImvdbPlugin.Instance?.Configuration.ApiKey;
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                _logger.LogWarning("ApiKey is unset");
-            }
-
-            return apiKey;
-        }
-
-        private async Task<ImvdbVideo?> GetIdResultAsync(string imvdbId, CancellationToken cancellationToken)
-        {
-            var apiKey = GetApiKey();
-            if (apiKey == null)
-            {
-                return null;
-            }
-
-            var url = $"{BaseUrl}/video/{imvdbId}";
-            await using var response = await GetResponseAsync(url, apiKey, cancellationToken)
-                .ConfigureAwait(false);
-            return await JsonSerializer.DeserializeAsync<ImvdbVideo>(response, _jsonSerializerOptions, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        private async Task<ImvdbSearchResponse?> GetSearchResponseAsync(MusicVideoInfo searchInfo, string apiKey, CancellationToken cancellationToken)
-        {
-            var url = $"{BaseUrl}/search/videos?q={string.Join("+", searchInfo.Artists)}+{searchInfo.Name}";
-            await using var response = await GetResponseAsync(url, apiKey, cancellationToken)
-                .ConfigureAwait(false);
-            return await JsonSerializer.DeserializeAsync<ImvdbSearchResponse>(response, _jsonSerializerOptions, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        private async Task<Stream> GetResponseAsync(string url, string apiKey, CancellationToken cancellationToken)
-        {
-            using var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
-            requestMessage.Headers.TryAddWithoutValidation("IMVDB-APP-KEY", apiKey);
-            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
-            var response = await _httpClientFactory.CreateClient(NamedClient.Default)
-                .SendAsync(requestMessage, cancellationToken)
-                .ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStreamAsync(cancellationToken)
-                .ConfigureAwait(false);
         }
     }
 }
