@@ -52,54 +52,55 @@ namespace Jellyfin.Plugin.IMVDb.Providers
                 HasMetadata = false
             };
 
+            // IMVDb id not provided, find first result.
             if (string.IsNullOrEmpty(imvdbId))
             {
                 var searchResults = await GetSearchResults(info, cancellationToken)
                     .ConfigureAwait(false);
-                var searchResult = searchResults.FirstOrDefault();
-                if (searchResult != null)
-                {
-                    result.HasMetadata = true;
-                    result.Item = new MusicVideo
-                    {
-                        Name = searchResult.Name,
-                        ProductionYear = searchResult.ProductionYear,
-                        Artists = searchResult.Artists.Select(i => i.Name).ToArray(),
-                        ImageInfos = new[]
-                        {
-                            new ItemImageInfo
-                            {
-                                Path = searchResult.ImageUrl
-                            }
-                        },
-                        ProviderIds = searchResult.ProviderIds
-                    };
-                }
+                searchResults.FirstOrDefault()?.TryGetProviderId(ImvdbPlugin.ProviderName, out imvdbId);
             }
-            else
+
+            // No results found, return without populating metadata.
+            if (string.IsNullOrEmpty(imvdbId))
             {
-                // do lookup here by imvdb id
-                var releaseResult = await _imvdbClient.GetIdResultAsync(imvdbId, cancellationToken)
-                    .ConfigureAwait(false);
-                if (releaseResult != null)
+                return result;
+            }
+
+            // do lookup here by imvdb id
+            var releaseResult = await _imvdbClient.GetIdResultAsync(imvdbId, cancellationToken)
+                .ConfigureAwait(false);
+            if (releaseResult != null)
+            {
+                result.HasMetadata = true;
+                // set properties from data
+                result.Item = new MusicVideo
                 {
-                    result.HasMetadata = true;
-                    // set properties from data
-                    result.Item = new MusicVideo
+                    Name = releaseResult.SongTitle,
+                    ProductionYear = releaseResult.Year,
+                    Artists = releaseResult.Artists.Select(i => i.Name).ToArray(),
+                    ImageInfos = new[]
                     {
-                        Name = releaseResult.SongTitle,
-                        ProductionYear = releaseResult.Year,
-                        Artists = releaseResult.Artists.Select(i => i.Name).ToArray(),
-                        ImageInfos = new[]
+                        new ItemImageInfo
                         {
-                            new ItemImageInfo
-                            {
-                                Path = releaseResult.Image?.Size1
-                            }
+                            Path = releaseResult.Image?.Size1
                         }
-                    };
-                    result.Item.SetProviderId(ImvdbPlugin.ProviderName, imvdbId);
+                    }
+                };
+
+                foreach (var director in releaseResult.Directors)
+                {
+                    result.AddPerson(new PersonInfo
+                    {
+                        Name = director.Name,
+                        ProviderIds = new Dictionary<string, string>
+                        {
+                            { ImvdbPlugin.ProviderName, director.Id.ToString(CultureInfo.InvariantCulture) }
+                        },
+                        Type = director.Position
+                    });
                 }
+
+                result.Item.SetProviderId(ImvdbPlugin.ProviderName, imvdbId);
             }
 
             return result;
@@ -125,7 +126,7 @@ namespace Jellyfin.Plugin.IMVDb.Providers
                         Name = r.SongTitle,
                         ProductionYear = r.Year,
                         Artists = r.Artists.Select(a => new RemoteSearchResult { Name = a.Name }).ToArray(),
-                        ImageUrl = r.Image?.Size1
+                        ImageUrl = r.Image?.Size1,
                     };
 
                     result.SetProviderId(ImvdbPlugin.ProviderName, r.Id.ToString(CultureInfo.InvariantCulture));

@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.IMVDb.Models;
 using MediaBrowser.Controller.Providers;
@@ -29,16 +28,6 @@ namespace Jellyfin.Plugin.IMVDb
         /// <returns>The IMVDB video.</returns>
         public Task<ImvdbVideo?> GetIdResultAsync(
             string imvdbId,
-            CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets the response from the requested url.
-        /// </summary>
-        /// <param name="url">The url.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The response content stream.</returns>
-        public Task<Stream> GetResponseAsync(
-            string url,
             CancellationToken cancellationToken);
     }
 }

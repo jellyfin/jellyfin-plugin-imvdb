@@ -15,6 +15,7 @@ namespace Jellyfin.Plugin.IMVDb.Models
         public ImvdbVideo()
         {
             Artists = Array.Empty<ImvdbArtist>();
+            Directors = Array.Empty<ImvdbDirector>();
         }
 
         /// <summary>
@@ -53,5 +54,11 @@ namespace Jellyfin.Plugin.IMVDb.Models
         [JsonPropertyName("image")]
         [JsonConverter(typeof(JsonImageResponseConverter))]
         public ImvdbImage? Image { get; set; }
+
+        /// <summary>
+        /// Gets or sets the directors.
+        /// </summary>
+        [JsonPropertyName("directors")]
+        public IReadOnlyList<ImvdbDirector> Directors { get; set; }
     }
 }

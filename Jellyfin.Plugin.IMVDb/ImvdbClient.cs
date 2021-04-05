@@ -1,7 +1,10 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Specialized;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,7 +43,15 @@ namespace Jellyfin.Plugin.IMVDb
         /// <inheritdoc />
         public async Task<ImvdbSearchResponse?> GetSearchResponseAsync(MusicVideoInfo searchInfo, CancellationToken cancellationToken)
         {
-            var url = $"{BaseUrl}/search/videos?q={string.Join("+", searchInfo.Artists)}+{searchInfo.Name}";
+            var queryValue = new StringBuilder();
+            queryValue.Append(searchInfo.Name);
+            foreach (var artist in searchInfo.Artists)
+            {
+                queryValue.Append('+')
+                    .Append(artist);
+            }
+
+            var url = $"{BaseUrl}/search/videos?q={queryValue}";
             await using var response = await GetResponseAsync(url, cancellationToken)
                 .ConfigureAwait(false);
             return await JsonSerializer.DeserializeAsync<ImvdbSearchResponse>(response, _jsonSerializerOptions, cancellationToken)
@@ -63,8 +74,7 @@ namespace Jellyfin.Plugin.IMVDb
                 .ConfigureAwait(false);
         }
 
-        /// <inheritdoc />
-        public async Task<Stream> GetResponseAsync(string url, CancellationToken cancellationToken)
+        private async Task<Stream> GetResponseAsync(string url, CancellationToken cancellationToken)
         {
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
             requestMessage.Headers.TryAddWithoutValidation("IMVDB-APP-KEY", GetApiKey());
