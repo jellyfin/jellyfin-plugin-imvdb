@@ -54,7 +54,7 @@ namespace Jellyfin.Plugin.IMVDb.Providers
                 return Enumerable.Empty<RemoteImageInfo>();
             }
 
-            var imvdbVideo = await _imvdbClient.GetIdResultAsync(imvdbId, cancellationToken)
+            var imvdbVideo = await _imvdbClient.GetVideoIdResultAsync(imvdbId, cancellationToken)
                 .ConfigureAwait(false);
             if (string.IsNullOrEmpty(imvdbVideo?.Image?.Size1))
             {

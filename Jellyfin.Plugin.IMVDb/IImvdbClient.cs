@@ -16,8 +16,18 @@ namespace Jellyfin.Plugin.IMVDb
         /// <param name="searchInfo">The search info.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The IMVDb search response.</returns>
-        public Task<ImvdbSearchResponse?> GetSearchResponseAsync(
+        public Task<ImvdbSearchResponse<ImvdbVideo>?> GetSearchResponseAsync(
             MusicVideoInfo searchInfo,
+            CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Gets the artist search result.
+        /// </summary>
+        /// <param name="searchInfo">The search info.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The IMVDb search response.</returns>
+        public Task<ImvdbSearchResponse<ImvdbArtist>?> GetSearchResponseAsync(
+            ArtistInfo searchInfo,
             CancellationToken cancellationToken);
 
         /// <summary>
@@ -26,7 +36,17 @@ namespace Jellyfin.Plugin.IMVDb
         /// <param name="imvdbId">The IMBDb id.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The IMVDB video.</returns>
-        public Task<ImvdbVideo?> GetIdResultAsync(
+        public Task<ImvdbVideo?> GetVideoIdResultAsync(
+            string imvdbId,
+            CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Get result by id.
+        /// </summary>
+        /// <param name="imvdbId">The IMBDb id.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The IMVDB video.</returns>
+        public Task<ImvdbArtist?> GetArtistIdResultAsync(
             string imvdbId,
             CancellationToken cancellationToken);
     }

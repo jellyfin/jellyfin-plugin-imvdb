@@ -24,5 +24,11 @@ namespace Jellyfin.Plugin.IMVDb.Models
         /// </summary>
         [JsonPropertyName("position_name")]
         public string Position { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the url.
+        /// </summary>
+        [JsonPropertyName("entity_url")]
+        public string Url { get; set; } = string.Empty;
     }
 }

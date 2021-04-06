@@ -5,22 +5,23 @@ using System.Text.Json.Serialization;
 namespace Jellyfin.Plugin.IMVDb.Models
 {
     /// <summary>
-    /// IMVDb search response.
+    /// The IMVDb search response.
     /// </summary>
-    public class ImvdbSearchResponse
+    /// <typeparam name="T">The type of response object.</typeparam>
+    public class ImvdbSearchResponse<T>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ImvdbSearchResponse"/> class.
+        /// Initializes a new instance of the <see cref="ImvdbSearchResponse{T}"/> class.
         /// </summary>
         public ImvdbSearchResponse()
         {
-            Results = Array.Empty<ImvdbVideo>();
+            Results = Array.Empty<T>();
         }
 
         /// <summary>
         /// Gets or sets the list of results.
         /// </summary>
         [JsonPropertyName("results")]
-        public IReadOnlyList<ImvdbVideo> Results { get; set; }
+        public IReadOnlyList<T> Results { get; set; }
     }
 }

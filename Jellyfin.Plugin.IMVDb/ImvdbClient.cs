@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Specialized;
-using System.IO;
+﻿using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
@@ -41,7 +39,7 @@ namespace Jellyfin.Plugin.IMVDb
         }
 
         /// <inheritdoc />
-        public async Task<ImvdbSearchResponse?> GetSearchResponseAsync(MusicVideoInfo searchInfo, CancellationToken cancellationToken)
+        public async Task<ImvdbSearchResponse<ImvdbVideo>?> GetSearchResponseAsync(MusicVideoInfo searchInfo, CancellationToken cancellationToken)
         {
             var queryValue = new StringBuilder();
             queryValue.Append(searchInfo.Name);
@@ -54,12 +52,22 @@ namespace Jellyfin.Plugin.IMVDb
             var url = $"{BaseUrl}/search/videos?q={queryValue}";
             await using var response = await GetResponseAsync(url, cancellationToken)
                 .ConfigureAwait(false);
-            return await JsonSerializer.DeserializeAsync<ImvdbSearchResponse>(response, _jsonSerializerOptions, cancellationToken)
+            return await JsonSerializer.DeserializeAsync<ImvdbSearchResponse<ImvdbVideo>>(response, _jsonSerializerOptions, cancellationToken)
                 .ConfigureAwait(false);
         }
 
         /// <inheritdoc />
-        public async Task<ImvdbVideo?> GetIdResultAsync(string imvdbId, CancellationToken cancellationToken)
+        public async Task<ImvdbSearchResponse<ImvdbArtist>?> GetSearchResponseAsync(ArtistInfo searchInfo, CancellationToken cancellationToken)
+        {
+            var url = $"{BaseUrl}/search/entities?q={searchInfo.Name}";
+            await using var response = await GetResponseAsync(url, cancellationToken)
+                .ConfigureAwait(false);
+            return await JsonSerializer.DeserializeAsync<ImvdbSearchResponse<ImvdbArtist>>(response, _jsonSerializerOptions, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async Task<ImvdbVideo?> GetVideoIdResultAsync(string imvdbId, CancellationToken cancellationToken)
         {
             var apiKey = GetApiKey();
             if (apiKey == null)
@@ -71,6 +79,22 @@ namespace Jellyfin.Plugin.IMVDb
             await using var response = await GetResponseAsync(url, cancellationToken)
                 .ConfigureAwait(false);
             return await JsonSerializer.DeserializeAsync<ImvdbVideo>(response, _jsonSerializerOptions, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async Task<ImvdbArtist?> GetArtistIdResultAsync(string imvdbId, CancellationToken cancellationToken)
+        {
+            var apiKey = GetApiKey();
+            if (apiKey == null)
+            {
+                return null;
+            }
+
+            var url = $"{BaseUrl}/video/{imvdbId}";
+            await using var response = await GetResponseAsync(url, cancellationToken)
+                .ConfigureAwait(false);
+            return await JsonSerializer.DeserializeAsync<ImvdbArtist>(response, _jsonSerializerOptions, cancellationToken)
                 .ConfigureAwait(false);
         }
 

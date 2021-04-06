@@ -40,7 +40,8 @@ namespace Jellyfin.Plugin.IMVDb.Providers
         }
 
         /// <inheritdoc />
-        public string Name => "IMVDb";
+        public string Name
+            => ImvdbPlugin.ProviderName;
 
         /// <inheritdoc />
         public async Task<MetadataResult<MusicVideo>> GetMetadata(MusicVideoInfo info, CancellationToken cancellationToken)
@@ -67,7 +68,7 @@ namespace Jellyfin.Plugin.IMVDb.Providers
             }
 
             // do lookup here by imvdb id
-            var releaseResult = await _imvdbClient.GetIdResultAsync(imvdbId, cancellationToken)
+            var releaseResult = await _imvdbClient.GetVideoIdResultAsync(imvdbId, cancellationToken)
                 .ConfigureAwait(false);
             if (releaseResult != null)
             {
@@ -94,13 +95,19 @@ namespace Jellyfin.Plugin.IMVDb.Providers
                         Name = director.Name,
                         ProviderIds = new Dictionary<string, string>
                         {
-                            { ImvdbPlugin.ProviderName, director.Id.ToString(CultureInfo.InvariantCulture) }
+                            { ImvdbPlugin.ProviderName, director.Id.ToString(CultureInfo.InvariantCulture) },
+                            { ImvdbPlugin.ProviderName + "_slug", director.Url },
                         },
                         Type = director.Position
                     });
                 }
 
                 result.Item.SetProviderId(ImvdbPlugin.ProviderName, imvdbId);
+
+                if (!string.IsNullOrEmpty(releaseResult.Url))
+                {
+                    result.Item.SetProviderId(ImvdbPlugin.ProviderName + "_slug", releaseResult.Url);
+                }
             }
 
             return result;

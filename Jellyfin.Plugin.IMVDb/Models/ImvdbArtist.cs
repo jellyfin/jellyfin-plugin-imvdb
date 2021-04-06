@@ -8,19 +8,22 @@ namespace Jellyfin.Plugin.IMVDb.Models
     public class ImvdbArtist
     {
         /// <summary>
-        /// Gets or sets the artist name.
+        /// Gets or sets the artist id.
         /// </summary>
-        public string? Name { get; set; }
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the artist slug.
+        /// Gets or sets the artist name.
         /// </summary>
-        public string? Slug { get; set; }
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the artist url.
         /// </summary>
-        public string? Url { get; set; }
+        [JsonPropertyName("url")]
+        public string Url { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the discogs id.
