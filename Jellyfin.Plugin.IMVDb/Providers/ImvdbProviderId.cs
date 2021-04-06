@@ -18,7 +18,8 @@ namespace Jellyfin.Plugin.IMVDb.Providers
             => ImvdbPlugin.ProviderName + "_slug";
 
         /// <inheritdoc />
-        public ExternalIdMediaType? Type { get; }
+        public ExternalIdMediaType? Type
+            => ExternalIdMediaType.ReleaseGroup;
 
         /// <summary>
         /// Gets the url format string.
