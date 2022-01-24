@@ -2,8 +2,6 @@
 
 ## Part of the [Jellyfin Project](https://jellyfin.org)
 
-#### Repository - https://repo.codyrobibero.dev/manifest.json
-
 ## Build Process
 
 1. Clone or download this repository
