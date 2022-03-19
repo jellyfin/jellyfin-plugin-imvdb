@@ -2,14 +2,15 @@
 name: "IMVDb"
 guid: "e29621a5-fa9e-4330-982e-ef6e54c0cad2"
 version: "2.0.0.0"
-targetAbi: "10.7.0.0"
+targetAbi: "10.7.7.0"
 framework: "net5.0"
 owner: "crobibero"
 overview: "Get Music Video metadata from IMVDb"
 description: >
   Get Music Video metadata from IMVDb
+
 category: "Metadata"
 artifacts:
-- "Jellyfin.Plugin.IMVDb.dll"
-changelog: >
-  changelog
+  - "Jellyfin.Plugin.IMVDb.dll"
+changelog: |-
+  - Use meta ci (#8) @crobibero
