@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Data.Enums;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Providers;
@@ -78,15 +79,13 @@ public class ImvdbProvider : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>
             {
                 Name = releaseResult.SongTitle,
                 ProductionYear = releaseResult.Year,
-                Artists = releaseResult.Artists.Select(i => i.Name).ToArray(),
-                ImageInfos = new[]
-                {
-                    new ItemImageInfo
-                    {
-                        Path = releaseResult.Image?.Size1
-                    }
-                }
+                Artists = releaseResult.Artists.Select(i => i.Name).ToArray()
             };
+
+            if (!string.IsNullOrEmpty(releaseResult.Image?.Size1))
+            {
+                result.Item.ImageInfos = [new ItemImageInfo { Path = releaseResult.Image.Size1 }];
+            }
 
             foreach (var director in releaseResult.Directors)
             {
@@ -98,7 +97,7 @@ public class ImvdbProvider : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>
                         { ImvdbPlugin.ProviderName, director.Id.ToString(CultureInfo.InvariantCulture) },
                         { ImvdbPlugin.ProviderName + "_slug", director.Url },
                     },
-                    Type = director.Position
+                    Type = PersonKind.Director
                 });
             }
 
