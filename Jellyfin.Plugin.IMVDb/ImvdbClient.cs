@@ -42,7 +42,7 @@ public class ImvdbClient : IImvdbClient
     {
         var queryValue = new StringBuilder();
         queryValue.Append(searchInfo.Name);
-        foreach (var artist in searchInfo.Artists)
+        foreach (var artist in searchInfo.Artists ?? [])
         {
             queryValue.Append('+')
                 .Append(artist);
