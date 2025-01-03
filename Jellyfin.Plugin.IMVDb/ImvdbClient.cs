@@ -42,7 +42,7 @@ public class ImvdbClient : IImvdbClient
     {
         var queryValue = new StringBuilder();
         queryValue.Append(searchInfo.Name);
-        if (searchInfo.Artists != null)
+        if (searchInfo.Artists is not null)
         {
             foreach (var artist in searchInfo.Artists)
             {
