@@ -21,15 +21,6 @@ public class ImvdbProviderId : IExternalId
     public ExternalIdMediaType? Type
         => ExternalIdMediaType.ReleaseGroup;
 
-    /// <summary>
-    /// Gets the url format string.
-    /// </summary>
-    /// <remarks>
-    /// IMVDb's url is /{artist}/{song}, so we just store the entire url as the id.
-    /// </remarks>
-    public string UrlFormatString
-        => "{0}";
-
     /// <inheritdoc />
     public bool Supports(IHasProviderIds item)
         => item is MusicVideo
