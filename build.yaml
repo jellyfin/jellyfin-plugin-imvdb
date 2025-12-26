@@ -1,8 +1,8 @@
 ---
 name: "IMVDb"
 guid: "e29621a5-fa9e-4330-982e-ef6e54c0cad2"
-version: 5
-targetAbi: "10.11.0.0"
+version: 6
+targetAbi: "10.11.5.0"
 framework: "net9.0"
 owner: "jellyfin"
 overview: "Get Music Video metadata from IMVDb"
@@ -13,8 +13,7 @@ category: "Music"
 artifacts:
   - "Jellyfin.Plugin.IMVDb.dll"
 changelog: |-
-  - Jellyfin 10.11 support (#29) @crobibero
-  - Update settings page (#30) @thornbill
+  - Revert "Update dependency Microsoft.Extensions.Http to v10" (#33) @Shadowghost
 
-  ### Bug Fixes ###
-  - Restore manual search for new items (#27) @abrain
+  ### Dependency updates ###
+  - Update dependency Microsoft.Extensions.Http to v10 (#31) @[renovate[bot]](https://github.com/apps/renovate)
