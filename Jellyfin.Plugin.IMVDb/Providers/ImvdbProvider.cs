@@ -105,11 +105,11 @@ public class ImvdbProvider : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>
                     { ImvdbPlugin.ProviderName, credit.Id.ToString(CultureInfo.InvariantCulture) }
                 };
 
-                // A credit carries the entity's slug rather than its url, so the url is built
-                // from the slug the same way IMVDb builds it.
+                // A credit carries the entity's slug rather than its page path, so the path is
+                // built the same way IMVDb builds it.
                 if (!string.IsNullOrEmpty(credit.Slug))
                 {
-                    providerIds[ImvdbPlugin.ProviderName + "_slug"] = ImvdbPlugin.GetEntityUrl(credit.Slug);
+                    providerIds[ImvdbPlugin.SlugProviderName] = ImvdbPlugin.GetEntitySlug(credit.Slug);
                 }
 
                 result.AddPerson(new PersonInfo
@@ -122,9 +122,10 @@ public class ImvdbProvider : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>
 
             result.Item.SetProviderId(ImvdbPlugin.ProviderName, imvdbId);
 
-            if (!string.IsNullOrEmpty(releaseResult.Url))
+            var slug = ImvdbPlugin.GetSlugFromUrl(releaseResult.Url);
+            if (!string.IsNullOrEmpty(slug))
             {
-                result.Item.SetProviderId(ImvdbPlugin.ProviderName + "_slug", releaseResult.Url);
+                result.Item.SetProviderId(ImvdbPlugin.SlugProviderName, slug);
             }
         }
 

@@ -100,9 +100,11 @@ public class ImvdbArtistProvider : IRemoteMetadataProvider<MusicArtist, ArtistIn
 
             result.Item.SetProviderId(ImvdbPlugin.ProviderName, imvdbId);
 
-            if (!string.IsNullOrEmpty(releaseResult.Url))
+            var slug = ImvdbPlugin.GetSlugFromUrl(releaseResult.Url)
+                ?? (string.IsNullOrEmpty(releaseResult.Slug) ? null : ImvdbPlugin.GetEntitySlug(releaseResult.Slug));
+            if (!string.IsNullOrEmpty(slug))
             {
-                result.Item.SetProviderId(ImvdbPlugin.ProviderName + "_slug", releaseResult.Url);
+                result.Item.SetProviderId(ImvdbPlugin.SlugProviderName, slug);
             }
         }
 
