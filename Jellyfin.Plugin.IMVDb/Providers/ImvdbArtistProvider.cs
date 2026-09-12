@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.IMVDb.Models;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Providers;
@@ -19,6 +20,8 @@ namespace Jellyfin.Plugin.IMVDb.Providers;
 /// </summary>
 public class ImvdbArtistProvider : IRemoteMetadataProvider<MusicArtist, ArtistInfo>
 {
+    private const int MaxSearchResults = 50;
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<ImvdbArtistProvider> _logger;
     private readonly IImvdbClient _imvdbClient;
@@ -48,25 +51,13 @@ public class ImvdbArtistProvider : IRemoteMetadataProvider<MusicArtist, ArtistIn
     {
         _logger.LogDebug("Get search result for {Name}", searchInfo.Name);
 
-        var searchResults = await _imvdbClient.GetSearchResponseAsync(searchInfo, cancellationToken)
+        // Jellyfin shows the caller every result a provider hands back, so the paging stops once
+        // there are more candidates than anyone would pick from.
+        return await _imvdbClient.GetArtistSearchResultsAsync(searchInfo, cancellationToken)
+            .Take(MaxSearchResults)
+            .Select(ToSearchResult)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-        if (searchResults == null)
-        {
-            return Enumerable.Empty<RemoteSearchResult>();
-        }
-
-        return searchResults.Results.Select(
-            r =>
-            {
-                var result = new RemoteSearchResult
-                {
-                    Name = r.Name
-                };
-
-                result.SetProviderId(ImvdbPlugin.ProviderName, r.Id.ToString(CultureInfo.InvariantCulture));
-
-                return result;
-            });
     }
 
     /// <inheritdoc />
@@ -79,12 +70,14 @@ public class ImvdbArtistProvider : IRemoteMetadataProvider<MusicArtist, ArtistIn
             HasMetadata = false
         };
 
-        // IMVDb id not provided, find first result.
+        // IMVDb id not provided, find first result. Enumerating lazily means only the first page
+        // of the search is ever fetched.
         if (string.IsNullOrEmpty(imvdbId))
         {
-            var searchResults = await GetSearchResults(info, cancellationToken)
+            var bestMatch = await _imvdbClient.GetArtistSearchResultsAsync(info, cancellationToken)
+                .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
-            searchResults.FirstOrDefault()?.TryGetProviderId(ImvdbPlugin.ProviderName, out imvdbId);
+            imvdbId = bestMatch?.Id.ToString(CultureInfo.InvariantCulture);
         }
 
         // No results found, return without populating metadata.
@@ -121,5 +114,17 @@ public class ImvdbArtistProvider : IRemoteMetadataProvider<MusicArtist, ArtistIn
     {
         return _httpClientFactory.CreateClient(NamedClient.Default)
             .GetAsync(new Uri(url), cancellationToken);
+    }
+
+    private static RemoteSearchResult ToSearchResult(ImvdbArtist artist)
+    {
+        var result = new RemoteSearchResult
+        {
+            Name = artist.Name
+        };
+
+        result.SetProviderId(ImvdbPlugin.ProviderName, artist.Id.ToString(CultureInfo.InvariantCulture));
+
+        return result;
     }
 }
