@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
+using Jellyfin.Plugin.IMVDb.Models;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Providers;
@@ -20,6 +21,8 @@ namespace Jellyfin.Plugin.IMVDb.Providers;
 /// </summary>
 public class ImvdbProvider : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>
 {
+    private const int MaxSearchResults = 50;
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<ImvdbProvider> _logger;
     private readonly IImvdbClient _imvdbClient;
@@ -54,12 +57,14 @@ public class ImvdbProvider : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>
             HasMetadata = false
         };
 
-        // IMVDb id not provided, find first result.
+        // IMVDb id not provided, find first result. Enumerating lazily means only the first page
+        // of the search is ever fetched.
         if (string.IsNullOrEmpty(imvdbId))
         {
-            var searchResults = await GetSearchResults(info, cancellationToken)
+            var bestMatch = await _imvdbClient.GetVideoSearchResultsAsync(info, cancellationToken)
+                .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
-            searchResults.FirstOrDefault()?.TryGetProviderId(ImvdbPlugin.ProviderName, out imvdbId);
+            imvdbId = bestMatch?.Id.ToString(CultureInfo.InvariantCulture);
         }
 
         // No results found, return without populating metadata.
@@ -87,25 +92,40 @@ public class ImvdbProvider : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>
                 result.Item.ImageInfos = [new ItemImageInfo { Path = releaseResult.Image.Size1 }];
             }
 
-            foreach (var director in releaseResult.Directors)
+            foreach (var credit in releaseResult.Credits?.Crew ?? Array.Empty<ImvdbCrewCredit>())
             {
+                var personKind = GetPersonKind(credit.PositionCode);
+                if (personKind is null)
+                {
+                    continue;
+                }
+
+                var providerIds = new Dictionary<string, string>
+                {
+                    { ImvdbPlugin.ProviderName, credit.Id.ToString(CultureInfo.InvariantCulture) }
+                };
+
+                // A credit carries the entity's slug rather than its page path, so the path is
+                // built the same way IMVDb builds it.
+                if (!string.IsNullOrEmpty(credit.Slug))
+                {
+                    providerIds[ImvdbPlugin.SlugProviderName] = ImvdbPlugin.GetEntitySlug(credit.Slug);
+                }
+
                 result.AddPerson(new PersonInfo
                 {
-                    Name = director.Name,
-                    ProviderIds = new Dictionary<string, string>
-                    {
-                        { ImvdbPlugin.ProviderName, director.Id.ToString(CultureInfo.InvariantCulture) },
-                        { ImvdbPlugin.ProviderName + "_slug", director.Url },
-                    },
-                    Type = PersonKind.Director
+                    Name = credit.Name,
+                    ProviderIds = providerIds,
+                    Type = personKind.Value
                 });
             }
 
             result.Item.SetProviderId(ImvdbPlugin.ProviderName, imvdbId);
 
-            if (!string.IsNullOrEmpty(releaseResult.Url))
+            var slug = ImvdbPlugin.GetSlugFromUrl(releaseResult.Url);
+            if (!string.IsNullOrEmpty(slug))
             {
-                result.Item.SetProviderId(ImvdbPlugin.ProviderName + "_slug", releaseResult.Url);
+                result.Item.SetProviderId(ImvdbPlugin.SlugProviderName, slug);
             }
         }
 
@@ -117,28 +137,13 @@ public class ImvdbProvider : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>
     {
         _logger.LogDebug("Get search result for {Name}", searchInfo.Name);
 
-        var searchResults = await _imvdbClient.GetSearchResponseAsync(searchInfo, cancellationToken)
+        // Jellyfin shows the caller every result a provider hands back, so the paging stops once
+        // there are more candidates than anyone would pick from.
+        return await _imvdbClient.GetVideoSearchResultsAsync(searchInfo, cancellationToken)
+            .Take(MaxSearchResults)
+            .Select(ToSearchResult)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-        if (searchResults == null)
-        {
-            return Enumerable.Empty<RemoteSearchResult>();
-        }
-
-        return searchResults.Results.Select(
-            r =>
-            {
-                var result = new RemoteSearchResult
-                {
-                    Name = r.SongTitle,
-                    ProductionYear = r.Year,
-                    Artists = r.Artists.Select(a => new RemoteSearchResult { Name = a.Name }).ToArray(),
-                    ImageUrl = r.Image?.Size1,
-                };
-
-                result.SetProviderId(ImvdbPlugin.ProviderName, r.Id.ToString(CultureInfo.InvariantCulture));
-
-                return result;
-            });
     }
 
     /// <inheritdoc />
@@ -147,4 +152,27 @@ public class ImvdbProvider : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>
         return _httpClientFactory.CreateClient(NamedClient.Default)
             .GetAsync(new Uri(url), cancellationToken);
     }
+
+    private static RemoteSearchResult ToSearchResult(ImvdbVideo video)
+    {
+        var result = new RemoteSearchResult
+        {
+            Name = video.SongTitle,
+            ProductionYear = video.Year,
+            Artists = video.Artists.Select(a => new RemoteSearchResult { Name = a.Name }).ToArray(),
+            ImageUrl = video.Image?.Size1,
+        };
+
+        result.SetProviderId(ImvdbPlugin.ProviderName, video.Id.ToString(CultureInfo.InvariantCulture));
+
+        return result;
+    }
+
+    private static PersonKind? GetPersonKind(string? positionCode)
+        => positionCode switch
+        {
+            ImvdbCrewCredit.DirectorPositionCode => PersonKind.Director,
+            ImvdbCrewCredit.ProducerPositionCode => PersonKind.Producer,
+            _ => null
+        };
 }

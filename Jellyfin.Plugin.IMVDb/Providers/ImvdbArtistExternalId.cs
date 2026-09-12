@@ -1,4 +1,3 @@
-﻿using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -6,8 +5,10 @@ using MediaBrowser.Model.Providers;
 
 namespace Jellyfin.Plugin.IMVDb.Providers;
 
-/// <inheritdoc />
-public class ImvdbProviderId : IExternalId
+/// <summary>
+/// External id for an IMVDb artist.
+/// </summary>
+public class ImvdbArtistExternalId : IExternalId
 {
     /// <inheritdoc />
     public string ProviderName
@@ -15,15 +16,13 @@ public class ImvdbProviderId : IExternalId
 
     /// <inheritdoc />
     public string Key
-        => ImvdbPlugin.ProviderName + "_slug";
+        => ImvdbPlugin.ProviderName;
 
     /// <inheritdoc />
     public ExternalIdMediaType? Type
-        => ExternalIdMediaType.ReleaseGroup;
+        => ExternalIdMediaType.Artist;
 
     /// <inheritdoc />
     public bool Supports(IHasProviderIds item)
-        => item is MusicVideo
-           || item is MusicArtist
-           || item is Person;
+        => item is MusicArtist;
 }

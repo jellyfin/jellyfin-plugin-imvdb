@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Audio;
@@ -17,17 +18,22 @@ public class ImvdbExternalUrlProvider : IExternalUrlProvider
     /// <inheritdoc />
     public IEnumerable<string> GetExternalUrls(BaseItem item)
     {
-        if (item.TryGetProviderId(ImvdbPlugin.ProviderName + "_slug", out var externalId))
+        ArgumentNullException.ThrowIfNull(item);
+
+        switch (item)
         {
-            switch (item)
-            {
-                case MusicVideo:
-                case MusicArtist:
-                case Person:
-                    // The external id is the entire url.
-                    yield return externalId;
-                    break;
-            }
+            case MusicVideo:
+            case MusicArtist:
+            case Person:
+                break;
+            default:
+                yield break;
+        }
+
+        if (item.TryGetProviderId(ImvdbPlugin.SlugProviderName, out var slug)
+            && ImvdbPlugin.GetPageUrl(slug) is { } pageUrl)
+        {
+            yield return pageUrl;
         }
     }
 }

@@ -21,6 +21,25 @@
                             IMVDb Api Key
                         </div>
                     </div>
+                    <div class="inputContainer">
+                        <label for="txtImvdbRateLimit">Requests per minute:</label>
+                        <input type="number" id="txtImvdbRateLimit" min="1" max="1000" step="1" required="required"
+                               is="emby-input"/>
+                        <div class="fieldDescription">
+                            How many requests per minute the plugin may send to IMVDb. IMVDb allows at most 1000 per
+                            minute per API key, shared by everything using that key. Leave this at the default unless
+                            IMVDb has granted you a different allowance.
+                        </div>
+                    </div>
+                    <div class="inputContainer">
+                        <label for="txtImvdbCacheDuration">Cache duration (hours):</label>
+                        <input type="number" id="txtImvdbCacheDuration" min="1" step="1" required="required"
+                               is="emby-input"/>
+                        <div class="fieldDescription">
+                            How long a response from IMVDb is reused before it is fetched again. IMVDb asks that
+                            applications cache rather than request a higher rate limit, so caching cannot be disabled.
+                        </div>
+                    </div>
                     <br/>
                     <div>
                         <button is="emby-button" type="submit" data-theme="b" class="raised button-submit block">
@@ -40,6 +59,8 @@
 
                 window.ApiClient.getPluginConfiguration(ImvdbPluginConfiguration.uniquePluginId).then(function (config) {
                     document.getElementById('txtImvdbApiKey').value = config.ApiKey || '';
+                    document.getElementById('txtImvdbRateLimit').value = config.RateLimit || 120;
+                    document.getElementById('txtImvdbCacheDuration').value = config.CacheDurationHours || 24;
                     Dashboard.hideLoadingMsg();
                 });
             },
@@ -49,6 +70,8 @@
 
                 window.ApiClient.getPluginConfiguration(ImvdbPluginConfiguration.uniquePluginId).then(function (config) {
                     config.ApiKey = document.getElementById('txtImvdbApiKey').value;
+                    config.RateLimit = parseInt(document.getElementById('txtImvdbRateLimit').value, 10) || 120;
+                    config.CacheDurationHours = parseInt(document.getElementById('txtImvdbCacheDuration').value, 10) || 24;
 
                     window.ApiClient.updatePluginConfiguration(ImvdbPluginConfiguration.uniquePluginId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);

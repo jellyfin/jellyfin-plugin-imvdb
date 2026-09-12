@@ -20,6 +20,25 @@
 
 This plugin adds the metadata provider for [IMVDb](https://imvdb.com//).
 
+## Configuration
+
+The plugin needs an IMVDb application key, which you can register for at
+[imvdb.com/developers/apps/new](https://imvdb.com/developers/apps/new). Enter it on the plugin's
+configuration page. Without a key the plugin logs an error and skips every lookup, so no requests
+are sent and no metadata is written.
+
+Two further settings keep the plugin inside IMVDb's
+[fair use rules](https://imvdb.com/developers/api):
+
+- **Requests per minute** - how fast the plugin may call the API. IMVDb allows at most 1000 calls
+  per minute per application key, and the whole allowance is shared by everything using that key.
+  The default of 120 leaves plenty of headroom; only raise it if IMVDb has granted you a larger
+  allowance. The plugin also follows the allowance IMVDb reports on its responses, and backs off
+  when it is rate limited.
+- **Cache duration (hours)** - how long a response is reused before it is fetched again. IMVDb
+  asks that applications cache rather than request a higher rate limit, so caching cannot be
+  turned off. The default is 24 hours.
+
 ## Installation
 
 [See the official documentation for install instructions](https://jellyfin.org/docs/general/server/plugins/index.html#installing).
