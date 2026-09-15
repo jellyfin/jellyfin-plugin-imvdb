@@ -2,7 +2,7 @@
 name: "IMVDb"
 guid: "e29621a5-fa9e-4330-982e-ef6e54c0cad2"
 imageUrl: "https://repo.jellyfin.org/files/plugin/images/jellyfin-plugin-imvdb.png"
-version: 6
+version: 7
 targetAbi: "12.0.0.0"
 framework: "net10.0"
 owner: "jellyfin"
@@ -14,9 +14,4 @@ category: "Music"
 artifacts:
   - "Jellyfin.Plugin.IMVDb.dll"
 changelog: |-
-  - Unstable: Update to latest Jellyfin preview packages (#37) @crobibero, @jellyfin-bot
-  - Revert "Update dependency Microsoft.Extensions.Http to v10" (#33) @Shadowghost
-
-  ### Dependency updates ###
-  - Update dependency Microsoft.Extensions.Http to 9.0.11 (#22) [@renovate[bot]](https://github.com/apps/renovate)
-  - Update dependency Microsoft.Extensions.Http to v10 (#31) [@renovate[bot]](https://github.com/apps/renovate)
+  - Maintenance (#40) @Shadowghost, @crobibero
